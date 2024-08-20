@@ -1,5 +1,7 @@
-node_modules
-./roles/node_modules
 .env
-error.log
-combined.log
+
+roles/node_modules
+roles/src/.env
+roles/combined.log
+roles/error.log
+
