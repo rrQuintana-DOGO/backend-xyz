@@ -6,6 +6,7 @@
       "@domain/*": ["src/domain/*"],
       "@infraestructure/*": ["src/infraestructure/*"],
       "@presentation/*": ["src/presentation/*"],
+      "@presentation": ["src/presentation"],
     },
     "target": "es2016",                                  
     "module": "commonjs",                                
