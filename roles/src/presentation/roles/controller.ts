@@ -9,16 +9,27 @@ import {
   RoleRepository,
   UpdateRole,
 } from "@domain/index";
-
+import { buildLogger } from "@plugins/logger.plugin";
 export class RoleController {
+
+  
   constructor(private readonly todoRepository: RoleRepository) {}
+
+  private readonly logger = buildLogger('RoleController');
+
 
   private handleError = (res: Response, error: unknown) => {
     if (error instanceof CustomError) {
       res.status(error.statusCode).json({ error: error.message });
       return;
     }
-
+    if (error instanceof Error) {
+      this.logger.error(error.message);
+      res.status(500).json({ error: "Internal server error - check logs" });
+      return;
+    }
+  
+    this.logger.error("Unknown error");
     res.status(500).json({ error: "Internal server error - check logs" });
   };
 
