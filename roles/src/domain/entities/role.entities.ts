@@ -1,20 +1,12 @@
-export interface RoleEntityOptions {
-  name: string;
-}
-
 export class RoleEntity {
-  public name: string;
-
-  constructor(options: RoleEntityOptions) {
-    const { name } = options;
-    this.name = name;
-  }
+  constructor(public id: number, public name: string) {}
 
   static fromObject = (object: { [key: string]: any }): RoleEntity => {
-    const { name } = object;
-    const role = new RoleEntity({
-      name,
-    });
-    return role;
+    const { id, name } = object;
+
+    if (!id) throw "Id is required";
+    if (!name) throw "Name is required";
+
+    return new RoleEntity(id, name);
   };
 }

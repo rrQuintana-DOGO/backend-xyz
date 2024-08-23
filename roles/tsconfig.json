@@ -3,10 +3,9 @@
     "baseUrl": "./",
     "paths": {
       "@plugins/*": ["src/plugins/*"],
-      "@domain/*": ["src/domain/*"],
-      "@infraestructure/*": ["src/infraestructure/*"],
-      "@presentation/*": ["src/presentation/*"],
-      "@presentation": ["src/presentation"],
+      "@config/*": ["src/config/*"],
+      "@dtos/*": ["src/domain/dtos/*"],
+      "@entities/*": ["src/domain/entities/*"],
     },
     "target": "es2016",                                  
     "module": "commonjs",                                
