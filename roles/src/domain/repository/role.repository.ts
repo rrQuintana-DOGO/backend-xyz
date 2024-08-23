@@ -3,8 +3,8 @@ import { RoleEntity } from "@entities/role.entities";
 
 export abstract class RoleRepository {  
   abstract create(creadeRoleDto: CreateRoleDto): Promise<RoleEntity>;
-  abstract getaAll(): Promise<RoleEntity[]>;
+  abstract getAll(): Promise<RoleEntity[]>;
   abstract findById(id: number): Promise<RoleEntity>;
   abstract updateById(UpdateRoleDto: UpdateRoleDto): Promise<RoleEntity>;
-  abstract deleteById(id: number): Promise<boolean>;
+  abstract deleteById(id: number): Promise<RoleEntity>;
 }

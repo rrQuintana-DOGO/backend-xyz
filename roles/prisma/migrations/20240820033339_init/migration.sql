@@ -1,7 +1,7 @@
 -- CreateTable
-CREATE TABLE "RoleModel" (
+CREATE TABLE "role" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
 
-    CONSTRAINT "RoleModel_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "role_pkey" PRIMARY KEY ("id")
 );

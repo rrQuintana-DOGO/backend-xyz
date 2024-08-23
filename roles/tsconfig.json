@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
       "@plugins/*": ["src/plugins/*"],
       "@config/*": ["src/config/*"],
+      "@data/*": ["src/data/*"],
+      "@domain/*": ["src/domain/*"],
       "@dtos/*": ["src/domain/dtos/*"],
       "@entities/*": ["src/domain/entities/*"],
+      "@repository/*": ["src/domain/repository/*"],
     },
     "target": "es2016",                                  
     "module": "commonjs",                                
