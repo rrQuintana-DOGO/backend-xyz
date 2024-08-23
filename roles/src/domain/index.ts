@@ -3,3 +3,8 @@ export * from "@domain/dtos"
 export * from "@entities/role.entities";
 export * from "@domain/errors/custom.error";
 export * from "@domain/repository/role.repository";
+export * from "@domain/use-cases/role/create-role";
+export * from "@domain/use-cases/role/delete-role";
+export * from "@domain/use-cases/role/get-role";
+export * from "@domain/use-cases/role/get-roles";
+export * from "@domain/use-cases/role/update-role";

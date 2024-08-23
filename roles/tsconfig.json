@@ -9,6 +9,8 @@
       "@dtos/*": ["src/domain/dtos/*"],
       "@entities/*": ["src/domain/entities/*"],
       "@repository/*": ["src/domain/repository/*"],
+      "@infraestructure/*": ["src/infraestructure/*"],
+      "@presentation/*": ["src/presentation/*"],
     },
     "target": "es2016",                                  
     "module": "commonjs",                                
