@@ -1,7 +1,0 @@
-.env
-
-roles/node_modules
-roles/src/.env
-roles/combined.log
-roles/error.log
-
