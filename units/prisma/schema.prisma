@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_POSTGRES")
+}
+
+model config_groups {
+  id_config_group String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  parameters      Json?    @db.Json
+  status          Boolean?
+  groups          groups[]
+}
+
+model device_has_groups {
+  id_device_has_group String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_device           String?  @db.Uuid
+  id_group            String?  @db.Uuid
+  devices             devices? @relation(fields: [id_device], references: [id_device], onDelete: NoAction, onUpdate: NoAction)
+  groups              groups?  @relation(fields: [id_group], references: [id_group], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model device_types {
+  id_device_type String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name           String?   @db.VarChar(50)
+  status         Boolean?
+  devices        devices[]
+}
+
+model devices {
+  id_device         String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_device_type    String?             @db.Uuid
+  imei              String?             @unique @db.VarChar(50)
+  name              String?             @db.VarChar(50)
+  id_ext            String?             @unique @db.VarChar(50)
+  status            Boolean?
+  device_has_groups device_has_groups[]
+  device_type       device_types?       @relation(fields: [id_device_type], references: [id_device_type], onDelete: NoAction, onUpdate: NoAction)
+  unit_has_devices  unit_has_devices[]
+}
+
+model fuel_consumptions {
+  id_fuel_consumption String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_unit             String? @db.Uuid
+  id_trip             String? @db.Uuid
+  date                BigInt?
+  fuel_level          Float?  @db.Real
+  distance_traveled   Float?  @db.Real
+  load_level          Float?  @db.Real
+  units               units?  @relation(fields: [id_unit], references: [id_unit], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model fuel_setpoints {
+  id_fuel_setpoint       String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  setpoint               Float?                   @db.Real
+  minimum_range          Float?                   @db.Real
+  periodic_alert         String?                   @db.VarChar(255)
+  id_unit_measure        String?                  @db.Uuid
+  status                 Boolean?
+  unit_measurements      unit_measurements?       @relation(fields: [id_unit_measure], references: [id_unit_measurement], onDelete: NoAction, onUpdate: NoAction)
+  unit_has_fuel_setpoint unit_has_fuel_setpoint[]
+}
+
+model fuel_types {
+  id_fuel_type        String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String?            @db.VarChar(255)
+  id_unit_measurement String?            @db.Uuid
+  status              Boolean?
+  unit_measurements   unit_measurements? @relation(fields: [id_unit_measurement], references: [id_unit_measurement], onDelete: NoAction, onUpdate: NoAction)
+  units               units[]
+}
+
+model groups {
+  id_group          String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name              String?             @db.VarChar(255)
+  status            Boolean?
+  id_config_group   String?             @db.Uuid
+  device_has_groups device_has_groups[]
+  config_groups     config_groups?      @relation(fields: [id_config_group], references: [id_config_group], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model maintenance_category {
+  id_maintenance_category        String                           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                           String?                          @db.VarChar(50)
+  status                         Boolean?
+  maintenance_category_has_tasks maintenance_category_has_tasks[]
+  maintenance_details            maintenance_details[]
+}
+
+model maintenance_category_has_tasks {
+  id_maintenance_category_has_task String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_maintenance_category          String?               @db.Uuid
+  id_maintenance_task              String?               @db.Uuid
+  maintenance_category             maintenance_category? @relation(fields: [id_maintenance_category], references: [id_maintenance_category], onDelete: NoAction, onUpdate: NoAction)
+  maintenance_tasks                maintenance_tasks?    @relation(fields: [id_maintenance_task], references: [id_maintenance_task], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model maintenance_details {
+  id_maintenance_detail   String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_maintenance          String?               @db.Uuid
+  id_maintenance_category String?               @db.Uuid
+  id_maintenance_task     String?               @db.Uuid
+  quantity                Int?
+  cost                    Float?
+  maintenance_category    maintenance_category? @relation(fields: [id_maintenance_category], references: [id_maintenance_category], onDelete: NoAction, onUpdate: NoAction)
+  maintenances            maintenances?         @relation(fields: [id_maintenance], references: [id_maintenance], onDelete: NoAction, onUpdate: NoAction)
+  maintenance_tasks       maintenance_tasks?    @relation(fields: [id_maintenance_task], references: [id_maintenance_task], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model maintenance_has_events {
+  id_maintenance_event String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_event             String?       @db.Uuid
+  id_maintenance       String?       @db.Uuid
+  maintenances         maintenances? @relation(fields: [id_maintenance], references: [id_maintenance], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model maintenance_tasks {
+  id_maintenance_task            String                           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                           String?                          @db.VarChar(255)
+  status                         Boolean?
+  maintenance_category_has_tasks maintenance_category_has_tasks[]
+  maintenance_details            maintenance_details[]
+}
+
+model maintenance_types {
+  id_maintenance_type String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String?        @db.VarChar(255)
+  status              Boolean?
+  maintenances        maintenances[]
+}
+
+model maintenances {
+  id_maintenance         String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  description            String?                  @db.VarChar(255)
+  schedule_date          BigInt?
+  start_date             BigInt?
+  end_date               BigInt?
+  release_date           BigInt?
+  reference              String?                  @db.VarChar(255)
+  labor_cost             Float?                   @db.Real
+  status                 Boolean?
+  id_supplier            String?                  @db.Uuid
+  id_unit                String?                  @db.Uuid
+  id_maintenance_type    String?                  @db.Uuid
+  id_event               String?                  @db.Uuid
+  id_user                String?                  @db.Uuid
+  maintenance_details    maintenance_details[]
+  maintenance_has_events maintenance_has_events[]
+  maintenance_types      maintenance_types?       @relation(fields: [id_maintenance_type], references: [id_maintenance_type], onDelete: NoAction, onUpdate: NoAction)
+  suppliers              suppliers?               @relation(fields: [id_supplier], references: [id_supplier], onDelete: NoAction, onUpdate: NoAction)
+  units                  units?                   @relation(fields: [id_unit], references: [id_unit], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model setpoints {
+  id_setpoint         String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String?            @db.VarChar(150)
+  optimus_temp        Float?             @db.Real
+  minimum_range       Float?             @db.Real
+  maximum_range       Float?             @db.Real
+  id_unit_measurement String?            @db.Uuid
+  status              Boolean?
+  unit_measurements   unit_measurements? @relation(fields: [id_unit_measurement], references: [id_unit_measurement], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model suppliers {
+  id_supplier  String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String?        @db.VarChar(255)
+  type         String?        @db.VarChar(255)
+  address      String?        @db.VarChar(255)
+  cp           String?        @db.VarChar(255)
+  city         String?        @db.VarChar(255)
+  country      String?        @db.VarChar(255)
+  status       Boolean?
+  maintenances maintenances[]
+}
+
+model unit_has_devices {
+  id_unit_has_device String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_unit            String?  @db.Uuid
+  id_device          String?  @db.Uuid
+  devices            devices? @relation(fields: [id_device], references: [id_device], onDelete: NoAction, onUpdate: NoAction)
+  units              units?   @relation(fields: [id_unit], references: [id_unit], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model unit_has_fuel_setpoint {
+  id_unit_has_fuel_setpoint String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_fuel_setpoint          String?         @db.Uuid
+  id_unit                   String?         @db.Uuid
+  fuel_setpoints            fuel_setpoints? @relation(fields: [id_fuel_setpoint], references: [id_fuel_setpoint], onDelete: NoAction, onUpdate: NoAction)
+  units                     units?          @relation(fields: [id_unit], references: [id_unit], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model unit_types {
+  id_unit_type             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                     String?  @db.VarChar(50)
+  optimal_fuel_performance Float?   @db.Real
+  status                   Boolean?
+  other_units              units[]  @relation("unitsTounits")
+}
+
+model units {
+  id_unit                String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                   String?                  @db.VarChar(50)
+  model                  String?                  @db.VarChar(50)
+  plate                  String?                  @db.VarChar(50)
+  year                   Int?
+  status                 Boolean?
+  id_unit_type           String?                  @db.Uuid
+  id_fuel_type           String?                  @db.Uuid
+  fuel_consumptions      fuel_consumptions[]
+  maintenances           maintenances[]
+  unit_has_devices       unit_has_devices[]
+  unit_has_fuel_setpoint unit_has_fuel_setpoint[]
+  fuel_types             fuel_types?              @relation(fields: [id_fuel_type], references: [id_fuel_type], onDelete: NoAction, onUpdate: NoAction)
+  units                  unit_types?              @relation("unitsTounits", fields: [id_unit_type], references: [id_unit_type], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model unit_measurements {
+  id_unit_measurement String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String?          @db.VarChar(50)
+  symbol              String?          @db.VarChar(50)
+  conversion          Json?            @db.Json
+  status              Boolean?
+  fuel_setpoints      fuel_setpoints[]
+  fuel_types          fuel_types[]
+  setpoints           setpoints[]
+}

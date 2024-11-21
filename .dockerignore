@@ -1,0 +1,16 @@
+dist/
+node_modules/
+.env
+.vscode/
+
+notifications/postgres/
+notifications/mongo/
+
+travel-planning/postgres/
+travel-planning/mongo/
+
+units/postgres/
+units/mongo/
+
+user/postgres/
+user/mongo/

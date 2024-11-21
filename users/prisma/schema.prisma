@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_POSTGRES")
+}
+
+model credentials {
+  id_credential String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username      String? @db.VarChar(50)
+  password      String? @db.VarChar(255)
+  login_type    String? @db.VarChar(50)
+  users         users[]
+}
+
+model module_has_permissions {
+  id_module_has_permission String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_module                String?      @db.Uuid
+  id_permission            String?      @db.Uuid
+  modules                  modules?     @relation(fields: [id_module], references: [id_module], onDelete: NoAction, onUpdate: NoAction)
+  permissions              permissions? @relation(fields: [id_permission], references: [id_permission], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model modules {
+  id_module              String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                   String?                  @db.VarChar(50)
+  status                 Boolean?
+  module_has_permissions module_has_permissions[]
+}
+
+model permissions {
+  id_permission          String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                   String?                  @db.VarChar(50)
+  params                 Json?                    @db.Json
+  status                 Boolean?
+  module_has_permissions module_has_permissions[]
+  role_has_permissions   role_has_permissions[]
+  user_has_permissions   user_has_permissions[]
+}
+
+model role_has_permissions {
+  id_role_has_permission String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_role                String?      @db.Uuid
+  id_permission          String?      @db.Uuid
+  permissions            permissions? @relation(fields: [id_permission], references: [id_permission], onDelete: NoAction, onUpdate: NoAction)
+  roles                  roles?       @relation(fields: [id_role], references: [id_role], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model roles {
+  id_role              String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                 String?                @db.VarChar(50)
+  description          String?                @db.VarChar(255)
+  status               Boolean?
+  role_has_permissions role_has_permissions[]
+  user_has_roles       user_has_roles[]
+}
+
+model time_zones {
+  id_time_zone String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String?  @db.VarChar(50)
+  off_set      Float?   @db.Real
+  status       Boolean?
+  users        users[]
+}
+
+model user_has_permissions {
+  id_user_has_permission String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_user                String?      @db.Uuid
+  id_permission          String?      @db.Uuid
+  permissions            permissions? @relation(fields: [id_permission], references: [id_permission], onDelete: NoAction, onUpdate: NoAction)
+  users                  users?       @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_has_roles {
+  id_user_has_role String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_user          String? @db.Uuid
+  id_role          String? @db.Uuid
+  roles            roles?  @relation(fields: [id_role], references: [id_role], onDelete: NoAction, onUpdate: NoAction)
+  users            users?  @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model users {
+  id_user              String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                 String?                @db.VarChar(50)
+  email                String?                @db.VarChar(150)
+  email_verified       Boolean?
+  phone                String?                @db.VarChar(50)
+  phone_verified       Boolean?
+  id_credential        String?                @db.Uuid
+  id_time_zone         String?                @db.Uuid
+  user_has_permissions user_has_permissions[]
+  user_has_roles       user_has_roles[]
+  credentials          credentials?           @relation(fields: [id_credential], references: [id_credential], onDelete: NoAction, onUpdate: NoAction)
+  time_zones           time_zones?            @relation(fields: [id_time_zone], references: [id_time_zone], onDelete: NoAction, onUpdate: NoAction)
+}

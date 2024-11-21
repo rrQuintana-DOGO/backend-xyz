@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@app/*": ["src/*"],
+      "@config/*": ["src/config/*"],
+      "@common/*": ["src/common/*"],
+      "@users/*": ["src/users/*"],
+      "@travel-planning/*": ["src/travel-planning/*"],
+      "@units/*": ["src/units/*"],
+      "@twilio/*": ["src/twilio/*"],
+      "@billing/*": ["src/billing/*"],
+      "@notifications/*": ["src/notifications/*"],
+      "@places_types/*": ["src/place_types/*"],
+      "@transports/*": ["src/transports/*"],
+      "@storage/*": ["src/storage/*"],
+      "@places/*": ["src/places/*"],
+      "@iotGateway/*": ["src/iot-gateway/*"],
+      "@fuel_setpoints/*": ["src/fuel_setpoints/*"],
+    }
+  }
+}

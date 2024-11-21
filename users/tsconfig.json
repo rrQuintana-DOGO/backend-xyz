@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths" : {
+      "@app/*": ["src/*"],
+      "@config/*": ["src/config/*"],
+      "@common/*": ["src/common/*"],
+      "@roles/*": ["src/roles/*"],
+      "@users/*": ["src/users/*"],
+      "@modules/*": ["src/modules/*"],
+      "@credentials/*": ["src/credentials/*"],
+      "@permissions/*": ["src/permissions/*"],
+      "@timezones/*": ["src/time_zones/*"],
+      "@seeders/*": ["prisma/seeders/*"],
+      "@dbManager/*": ["src/db_manager/*"],
+    }
+  }
+}

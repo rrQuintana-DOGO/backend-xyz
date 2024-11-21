@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@app/*": ["src/*"],
+      "@config/*": ["src/config/*"],
+      "@common/*": ["src/common/*"],
+      "@devices_type/*": ["src/devices_type/*"],
+      "@devices/*": ["src/devices/*"],
+      "@groups/*": ["src/groups/*"],
+      "@confgroups/*": ["src/conf_groups/*"],
+      "@units/*": ["src/units/*"],
+      "@units_type/*": ["src/units_type/*"],
+      "@fuel_types/*": ["src/fuel_types/*"],
+      "@unit_measurement/*": ["src/unit_measurement/*"],
+      "@setpoints/*": ["src/setpoints/*"],
+      "@fuel_setpoints/*": ["src/fuel_setpoints/*"],
+      "@seeders/*": ["prisma/seeders/*"],
+      "@dbManager/*": ["src/db_manager/*"],
+    }
+  }
+}

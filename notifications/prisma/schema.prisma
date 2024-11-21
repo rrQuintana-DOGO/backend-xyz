@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_POSTGRES")
+}
+
+model conf_event {
+  id_conf_event String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  json_data     Json?    @db.Json
+  id_event      String?  @db.Uuid
+  status        Boolean?
+  events        events?  @relation(fields: [id_event], references: [id_event], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model event_types {
+  id_event_type String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String?         @db.VarChar(150)
+  params        Json?           @db.Json
+  status        Boolean?
+  events_routes events_routes[]
+}
+
+model events {
+  id_event    String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String?      @db.VarChar(50)
+  params      Json?        @db.Json
+  description String?      @db.VarChar(255)
+  status      Boolean?
+  conf_event  conf_event[]
+}
+
+model events_routes {
+  id_event_route String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name           String?      @db.VarChar(50)
+  description    String?      @db.VarChar(255)
+  id_event_type  String?      @db.Uuid
+  status         Boolean?
+  event_types    event_types? @relation(fields: [id_event_type], references: [id_event_type], onDelete: NoAction, onUpdate: NoAction)
+}

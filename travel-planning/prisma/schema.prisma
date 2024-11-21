@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_POSTGRES")
+}
+
+model carrier_has_contacts {
+  id_carrier_has_contact String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_contact             String?   @db.Uuid
+  id_carrier             String?   @db.Uuid
+  carriers               carriers? @relation(fields: [id_carrier], references: [id_carrier], onDelete: NoAction, onUpdate: NoAction)
+  contacts               contacts? @relation(fields: [id_contact], references: [id_contact], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model carrier_has_drivers {
+  id_carrier_has_driver String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_carrier            String?   @db.Uuid
+  id_driver             String?   @db.Uuid
+  carriers              carriers? @relation(fields: [id_carrier], references: [id_carrier], onDelete: NoAction, onUpdate: NoAction)
+  drivers               drivers?  @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model carrier_has_units {
+  id_carrier_has_unit String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_unit             String?   @db.Uuid
+  id_carrier          String?   @db.Uuid
+  carriers            carriers? @relation(fields: [id_carrier], references: [id_carrier], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model carriers {
+  id_carrier           String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                 String?                @db.VarChar(50)
+  phone                String?                @db.VarChar(50)
+  email                String?                @db.VarChar(50)
+  address              String?                @db.VarChar(255)
+  status               Boolean?
+  carrier_has_contacts carrier_has_contacts[]
+  carrier_has_drivers  carrier_has_drivers[]
+  carrier_has_units    carrier_has_units[]
+  trips                trips[]
+}
+
+model client_has_contacts {
+  id_client_has_contact String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_client             String?   @db.Uuid
+  id_contact            String?   @db.Uuid
+  clients               clients?  @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction)
+  contacts              contacts? @relation(fields: [id_contact], references: [id_contact], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model clients {
+  id_client    String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String?  @db.VarChar(50)
+  company_name String?  @db.VarChar(50)
+  address      String?  @db.VarChar(255)
+  status       Boolean?
+  client_has_contacts client_has_contacts[]
+  trips        trips[]
+}
+
+model contacts {
+  id_contact           String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                 String?                @db.VarChar(50)
+  email                String?                @db.VarChar(50)
+  phone                String?                @db.VarChar(50)
+  address              String?                @db.VarChar(255)
+  role                 String?                @db.VarChar(50)
+  status               Boolean?
+  carrier_has_contacts carrier_has_contacts[]
+  client_has_contacts  client_has_contacts[]
+  place_has_contacts   place_has_contacts[]
+}
+
+model drivers {
+  id_driver           String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String?               @db.VarChar(50)
+  phone               String?               @db.VarChar(50)
+  email               String?               @db.VarChar(150)
+  rc_code             String?               @db.VarChar(50)
+  license_expiration  DateTime?             @db.Date
+  license_type_id     String?               @db.Uuid
+  status              Boolean?
+  carrier_has_drivers carrier_has_drivers[]
+  license_types       license_types?        @relation(fields: [license_type_id], references: [id_license_type], onDelete: NoAction, onUpdate: NoAction)
+  trip_has_drivers    trip_has_drivers[]
+}
+
+model geofences {
+  id_geofence      String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String?         @db.VarChar(255)
+  id_geofence_type String?         @db.Uuid
+  coords           Json?           @db.Json
+  status           Boolean?
+  geofence_types   geofence_types? @relation(fields: [id_geofence_type], references: [id_geofence_type], onDelete: NoAction, onUpdate: NoAction)
+  places           places[]
+  stops            stops[]
+}
+
+model georoutes {
+  id_georoute String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  coords      Json?       @db.Json
+  status      Boolean?
+  waypoints   waypoints[]
+}
+
+model journey_types {
+  id_journey_type String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name            String?  @db.VarChar(50)
+  description     String?  @db.VarChar(255)
+  status          Boolean?
+  trips           trips[]
+}
+
+model license_types {
+  id_license_type String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name            String?   @db.VarChar(255)
+  status          Boolean?
+  drivers         drivers[]
+}
+
+model phases {
+  id_phase String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name     String?  @db.VarChar(50)
+  status   Boolean?
+  symbol                       String @db.VarChar(50)
+  trips    trips[]
+}
+
+model place_has_contacts {
+  id_place_has_contact String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_place             String?   @db.Uuid
+  id_contact           String?   @db.Uuid
+  contacts             contacts? @relation(fields: [id_contact], references: [id_contact], onDelete: NoAction, onUpdate: NoAction)
+  places               places?   @relation(fields: [id_place], references: [id_place], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model place_types {
+  id_place_type String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String?  @db.VarChar(50)
+  status        Boolean?
+  places        places[]
+}
+
+model places {
+  id_place           String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_place_type      String?              @db.Uuid
+  id_geofence        String?              @db.Uuid
+  name               String?              @db.VarChar(50)
+  location           String?              @db.VarChar(50)
+  address            String?              @db.VarChar(255)
+  status             Boolean?
+  place_has_contacts place_has_contacts[]
+  geofences          geofences?           @relation(fields: [id_geofence], references: [id_geofence], onDelete: NoAction, onUpdate: NoAction)
+  place_types        place_types?         @relation(fields: [id_place_type], references: [id_place_type], onDelete: NoAction, onUpdate: NoAction)
+  trips_has_places   trips_has_places[]
+}
+
+model route_has_event_routes {
+  id_route_has_event_route String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_event_route           String? @db.Uuid
+  id_route                 String? @db.Uuid
+  event_count              Int?
+  version                  Int?
+  routes                   routes? @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model route_has_stops {
+  id_route_has_stop String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_route          String? @db.Uuid
+  id_stop           String? @unique @db.Uuid
+  departure_date    BigInt?
+  arrival_date      BigInt?
+  version           Int?
+  routes            routes? @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction)
+  stops             stops?  @relation(fields: [id_stop], references: [id_stop], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model route_has_waypoints {
+  id_route_has_waypoint String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_route              String?    @db.Uuid
+  id_waypoint           String?    @db.Uuid
+  version               Int?
+  routes                routes?    @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction)
+  waypoints             waypoints? @relation(fields: [id_waypoint], references: [id_waypoint], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model routes {
+  id_route               String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                   String?                  @db.VarChar(50)
+  description            String?                  @db.VarChar(50)
+  version                Int?
+  status                 Boolean?
+  route_has_event_routes route_has_event_routes[]
+  route_has_stops        route_has_stops[]
+  route_has_waypoints    route_has_waypoints[]
+  trips                  trips[]
+}
+
+model situations {
+  id_situation String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String?  @db.VarChar(255)
+  status       Boolean?
+}
+
+model status {
+  id_status String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String?  @db.VarChar(50)
+  status    Boolean?
+  trips     trips[]
+}
+
+model stop_types {
+  id_stop_type String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String?  @db.VarChar(50)
+  status       Boolean?
+  stops        stops[]
+}
+
+model stops {
+  id_stop         String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_geofence     String?          @db.Uuid
+  name            String?          @db.VarChar(50)
+  address         String?          @db.VarChar(255)
+  status          Boolean?
+  id_stop_type    String?          @db.Uuid
+  route_has_stops route_has_stops?
+  geofences       geofences?       @relation(fields: [id_geofence], references: [id_geofence], onDelete: NoAction, onUpdate: NoAction)
+  stop_types      stop_types?      @relation(fields: [id_stop_type], references: [id_stop_type], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model trip_has_drivers {
+  id_trip_has_driver String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_driver          String?  @db.Uuid
+  id_trip            String?  @db.Uuid
+  drivers            drivers? @relation(fields: [id_driver], references: [id_driver], onDelete: NoAction, onUpdate: NoAction)
+  trips              trips?   @relation(fields: [id_trip], references: [id_trip], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model trip_has_events {
+  id_trip_has_event String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_trip           String? @db.Uuid
+  id_event          String? @db.Uuid
+  trips             trips?  @relation(fields: [id_trip], references: [id_trip], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model trip_types {
+  id_trip_type String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String?  @db.VarChar(50)
+  description  String?  @db.VarChar(255)
+  status       Boolean?
+  trips        trips[]
+}
+
+model trips {
+  id_trip          String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_ext           String?            @unique @db.VarChar(50)
+  id_trip_type     String?            @db.Uuid
+  id_journey_type  String?            @db.Uuid
+  id_carrier       String?            @db.Uuid
+  eta              BigInt?
+  id_route         String?            @db.Uuid
+  id_client        String?            @db.Uuid
+  eda              Int?
+  id_phase         String?            @db.Uuid
+  id_status        String?            @db.Uuid
+  kilometers       Float?             @db.Real
+  description      String?            @db.VarChar(255)
+  load_size        Float?             @db.Real
+  fuel_level_start Float?             @db.Real
+  fuel_level_end   Float?             @db.Real
+  action           Int?
+  created_at       BigInt?
+  deleted_at       BigInt?
+  trip_has_drivers trip_has_drivers[]
+  trip_has_events  trip_has_events[]
+  carriers         carriers?          @relation(fields: [id_carrier], references: [id_carrier], onDelete: NoAction, onUpdate: NoAction)
+  clients          clients?           @relation(fields: [id_client], references: [id_client], onDelete: NoAction, onUpdate: NoAction)
+  journey_types    journey_types?     @relation(fields: [id_journey_type], references: [id_journey_type], onDelete: NoAction, onUpdate: NoAction)
+  phases           phases?            @relation(fields: [id_phase], references: [id_phase], onDelete: NoAction, onUpdate: NoAction)
+  routes           routes?            @relation(fields: [id_route], references: [id_route], onDelete: NoAction, onUpdate: NoAction)
+  status           status?            @relation(fields: [id_status], references: [id_status], onDelete: NoAction, onUpdate: NoAction)
+  trip_types       trip_types?        @relation(fields: [id_trip_type], references: [id_trip_type], onDelete: NoAction, onUpdate: NoAction)
+  trips_has_places trips_has_places[] 
+  trips_has_units  trips_has_units[]
+}
+
+model trips_has_places {
+  id_trips_has_places          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_trip                      String? @db.Uuid
+  id_place                     String? @db.Uuid
+  estimate_arrive_date         BigInt?
+  real_arrive_date             BigInt?
+  estimate_departure_date      BigInt?
+  real_estimate_departure_date BigInt?
+  phase                        Int?
+  action                       Int?
+  places                       places? @relation(fields: [id_place], references: [id_place], onDelete: NoAction, onUpdate: NoAction)
+  trips                        trips?  @relation(fields: [id_trip], references: [id_trip], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model trips_has_units {
+  id_has_units String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_trip      String? @db.Uuid
+  id_unit      String? @db.Uuid
+  id_setpoint  String? @db.Uuid
+  trips        trips?  @relation(fields: [id_trip], references: [id_trip], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model waypoints {
+  id_waypoint         String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id_georoute         String?               @db.Uuid
+  order               Int                   
+  name                String?               @db.VarChar(50)
+  description         String?               @db.VarChar(255)
+  status              Boolean?
+  route_has_waypoints route_has_waypoints[]
+  georoutes           georoutes?            @relation(fields: [id_georoute], references: [id_georoute], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model geofence_types {
+  id_geofence_type String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String?     @db.VarChar(50)
+  status           Boolean?
+  geofences        geofences[]
+}

@@ -1,0 +1,286 @@
+services:
+  nats-server:
+    image: nats:latest
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+    networks:
+      - my_shared_network
+
+  zookeeper:
+    image: zookeeper:latest
+    ports:
+      - "2181:2181"
+    networks:
+    - my_shared_network
+
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    depends_on:
+      - zookeeper
+    networks:
+      - my_shared_network
+
+  client-gateway:
+    depends_on:
+      - nats-server
+    build: ./client-gateway
+    ports:
+      - "${CLIENT_GATEWAY_PORT}:8000"
+    volumes:
+      - ./client-gateway/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - PORT=${CLIENT_GATEWAY_PORT}
+      - NATS_SERVERS=nats://nats-server:4222
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_S3_URL_EXPIRES=${AWS_S3_URL_EXPIRES}
+      - SECRET_KEY_TOKEN=${SECRET_KEY_TOKEN}
+      - CRYPT_KEY=${CRYPT_KEY}
+      - ADMON_URL=${ADMON_URL}
+      - REACT_APP_URL=${REACT_APP_URL}
+    networks:
+      - my_shared_network
+
+  iot-gateway:
+    depends_on:
+      - nats-server
+    build: ./iot-gateway
+    volumes:
+      - ./iot-gateway/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - KAFKA_BROKERS=kafka:9092
+      - FLESPI_TOPIC=flespi/message/gw/devices/+
+      - MQTT_HOST=${MQTT_HOST}
+      - FLESPI_TOKEN=${FLESPI_TOKEN}
+      - DATABASE_URL_MONGODB=mongodb://iot-gateway-mongo-db:27017/iot_gateway_db
+    env_file:
+      - .env.iot-gateway
+    networks:
+      - my_shared_network
+
+
+  notifications-ms:
+    depends_on:
+      - nats-server
+      - notifications-postgres-db
+      - notifications-mongo-db
+    build: ./notifications
+    volumes:
+      - ./notifications/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL_POSTGRES=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@notifications-postgres-db:5432/notifications_db
+      - DATABASE_URL_MONGODB=mongodb://notifications-mongo-db:27017/notifications_db
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_S3_URL_EXPIRES=${AWS_S3_URL_EXPIRES}
+    env_file:
+      - .env.notifications
+    networks:
+      - my_shared_network
+
+  travel-planning-ms:
+    depends_on:
+      - nats-server
+      - travel-planning-postgres-db
+      - travel-planning-mongo-db
+    build: ./travel-planning
+    volumes:
+      - ./travel-planning/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL_POSTGRES=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@travel-planning-postgres-db:5432/travel_planning_db
+      - DATABASE_URL_MONGODB=mongodb://travel-planning-mongo-db:27017/travel_planning_db
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_REGION=${AWS_S3_REGION}
+      - AWS_S3_URL_EXPIRES=${AWS_S3_URL_EXPIRES}
+    env_file:
+      - .env.travel-planning
+    networks:
+      - my_shared_network
+
+  twilio-ms:
+    depends_on:
+      - nats-server
+    build: ./twilio
+    volumes:
+      - ./twilio/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - EMAIL_TEMPLATE_ID=${EMAIL_TEMPLATE_ID}
+      - EMAIL=${EMAIL}
+    networks:
+        - my_shared_network
+
+  units-ms:
+    depends_on:
+      - nats-server
+      - units-postgres-db
+      - units-mongo-db
+    build: ./units
+    volumes:
+      - ./units/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL_POSTGRES=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@units-postgres-db:5432/units_db
+      - DATABASE_URL_MONGODB=mongodb://units-mongo-db:27017/units_db
+    env_file:
+      - .env.units
+    networks:
+        - my_shared_network
+
+  users-ms:
+    depends_on:
+      - nats-server
+      - users-postgres-db
+      - users-mongo-db
+    build: ./users
+    volumes:
+      - ./users/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - DATABASE_URL_POSTGRES=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@users-postgres-db:5432/users_db
+      - DATABASE_URL_MONGODB=mongodb://users-mongo-db:27017/users_db
+    env_file:
+      - .env.users
+    networks:
+        - my_shared_network
+
+  notifications-postgres-db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./notifications/postgres:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: notifications_db
+    networks:
+        - my_shared_network
+
+  notifications-mongo-db:
+    image: mongo:latest
+    volumes:
+      - ./notifications/mongo:/data/db
+    restart: always
+    ports:
+      - "27018:27017"
+    networks:
+        - my_shared_network
+
+  travel-planning-postgres-db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./travel-planning/postgres:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: travel_planning_db
+    networks:
+        - my_shared_network
+
+  travel-planning-mongo-db:
+    image: mongo:latest
+    volumes:
+      - ./travel-planning/mongo:/data/db
+    restart: always
+    ports:
+      - "27019:27017"
+    networks:
+        - my_shared_network
+
+  units-postgres-db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./units/postgres:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: units_db
+    networks:
+        - my_shared_network
+
+  units-mongo-db:
+    image: mongo:latest
+    volumes:
+      - ./units/mongo:/data/db
+    restart: always
+    ports:
+      - "27020:27017"
+    networks:
+        - my_shared_network
+
+  users-postgres-db:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./users/postgres:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: users_db
+    networks:
+        - my_shared_network
+
+  users-mongo-db:
+    image: mongo:latest
+    volumes:
+      - ./users/mongo:/data/db
+    restart: always
+    ports:
+      - "27021:27017"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+        - my_shared_network
+
+  iot-gateway-mongo-db:
+    image: mongo:latest
+    volumes:
+      - ./iot-gateway/mongo:/data/db
+    restart: always
+    ports:
+      - "27022:27017"
+    networks:
+        - my_shared_network
+        
+networks:
+  my_shared_network:
+    external: true
