@@ -58,16 +58,10 @@ export const tripsSeeder = async (count: number) => {
     });
 
     const placesNames = [
-      'Hotel',
-      'Restaurante',
-      'Aeropuerto',
-      'Terminal de buses',
-      'Terminal de trenes',
-      'Estación de servicio',
-      'Parque',
-      'Museo',
-      'Centro comercial',
-      'Playa'
+      'Paseo del country',,
+      'Puente internacional',
+      'Encinal',
+      'San Antonio',
     ];
 
     const placesSort = places.sort((a, b) => {

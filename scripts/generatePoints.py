@@ -2,8 +2,8 @@ import osmnx as ox
 import networkx as nx
 
 def calculate_route():
-    start_coords = (17.166239659199654, -96.78676571099837)
-    end_coords = (17.123181397233125, -96.76540617506976)
+    start_coords = (25.641197440014864, -100.28304077467403)
+    end_coords = (29.519651885880343, -98.48429997116423)
 
     G = ox.graph_from_point(start_coords, dist=5000, network_type='drive')
 

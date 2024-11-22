@@ -9,18 +9,22 @@ export const driverSeeder = async () => {
 
     const liscence_types = await prisma.license_types.findMany();
 
+    // const driversNames = [
+    //   'Juan Perez',
+    //   'Pedro Rodriguez',
+    //   'Maria Lopez',
+    //   'Jose Hernandez',
+    //   'Ana Martinez',
+    //   'Luis Gonzalez',
+    //   'Carlos Ramirez',
+    //   'Laura Torres',
+    //   'Sofia Flores',
+    //   'Jorge Diaz'
+    // ];
+
     const driversNames = [
-      'Juan Perez',
-      'Pedro Rodriguez',
-      'Maria Lopez',
-      'Jose Hernandez',
-      'Ana Martinez',
-      'Luis Gonzalez',
-      'Carlos Ramirez',
-      'Laura Torres',
-      'Sofia Flores',
-      'Jorge Diaz'
-    ];
+      'Diego Kaleb Samano Rodriguez',
+    ]
 
     // Crear un array con la cantidad deseada de objetos
     const objects = driversNames.map(name => ({

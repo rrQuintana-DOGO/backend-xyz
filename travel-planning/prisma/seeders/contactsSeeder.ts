@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '@prisma/client';
-import { ad } from '@faker-js/faker/dist/airline-C5Qwd7_q';
 
 const prisma = new PrismaClient();
 

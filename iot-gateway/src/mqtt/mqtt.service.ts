@@ -78,19 +78,19 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
 
     let index = 0;
 
-    while (true) {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      this.logger.log('Simulating MQTT data processing...');
+    // while (true) {
+    //   await new Promise((resolve) => setTimeout(resolve, 3000));
+    //   this.logger.log('Simulating MQTT data processing...');
 
-      const coord = coordinates[index];
-      this.natsClient.emit('mqtt-data-processed', {
-        latitude: coord.latitude,
-        longitude: coord.longitude,
-        message: 'Simulated MQTT data'
-      });
+    //   const coord = coordinates[index];
+    //   this.natsClient.emit('mqtt-data-processed', {
+    //     latitude: coord.latitude,
+    //     longitude: coord.longitude,
+    //     message: 'Simulated MQTT data'
+    //   });
 
-      index = (index + 1) % coordinates.length; // Avanza al siguiente punto, vuelve al inicio si llega al final
-    }
+    //   index = (index + 1) % coordinates.length; // Avanza al siguiente punto, vuelve al inicio si llega al final
+    // }
 
     try {
       await this.kafkaProducer.connect();
@@ -122,7 +122,8 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
           const parsedMessage = parseJsonStringToDto(receivedMessage);
           //this.logger.log(`Parsed message: ${JSON.stringify(parsedMessage)}`);
 
-          await this.saveRecord(parsedMessage, 'transportes_ffigueroa');
+          console.log('Parsed message:', parsedMessage);
+          await this.saveRecord(parsedMessage, 'test');
 
           await this.kafkaProducer.send({
             topic: 'iot-signals',

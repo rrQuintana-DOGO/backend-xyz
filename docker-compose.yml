@@ -138,6 +138,7 @@ services:
   events-pattern-ms:
     depends_on:
       - nats-server
+      - client-gateway
     build: ./events-pattern
     volumes:
       - ./events-pattern/src:/usr/src/app/src

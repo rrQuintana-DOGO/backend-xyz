@@ -12,10 +12,10 @@ export class  PlacesTypesController {
   constructor(private readonly placesTypesService: PlacesTypesService) {}
 
   @MessagePattern({ cmd: 'create-place-types' })
-  create(@Payload() data: { createPlaceTypeDto: CreatePlaceTypeDto, slug: string }) {
-    const { createPlaceTypeDto, slug } = data;
+  create(@Payload() data: { createPlaceTypesDto: CreatePlaceTypeDto, slug: string }) {
+    const { createPlaceTypesDto, slug } = data;
 
-    return this.placesTypesService.create(createPlaceTypeDto, slug);
+    return this.placesTypesService.create(createPlaceTypesDto, slug);
   }
 
   @MessagePattern({ cmd: 'find-all-place-types' })

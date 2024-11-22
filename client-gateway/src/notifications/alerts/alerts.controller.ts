@@ -17,6 +17,8 @@ import { NATS_SERVICE } from '@config/index';
 import { CreateAlertDto } from '@notifications/alerts/dto/create-alerts.dto';
 import { UpdateAlertDto } from '@notifications/alerts/dto/update-alerts.dto';
 import { CloseAlertDto } from './dto/close-alerts.dto';
+import { CreateNotificationsTelemetryDto } from './dto/create_notifications-telemetry';
+import { CreateNotificationsGeofencesDto } from './dto/create-alert-geofence';
 import { Auth } from '@common/guards/auth.decorator';
 
 @Controller('alerts')
@@ -104,6 +106,40 @@ export class AlertsController {
     }
   }
 
+  @Post('/notification_telemetry')
+  @Auth()
+  async notification_telemetry(@Body() createNotificationsTelemetryDto: CreateNotificationsTelemetryDto, @Request() req) {
+    const data = req['data'];
+
+    try {
+      //return data;
+      const notifi_telemetry = await firstValueFrom(
+        this.alertClient.send({ cmd: 'create-notification-telemetry' }, { createNotificationsTelemetryDto, slug: data.slug }),
+      );
+
+      return notifi_telemetry; 
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  @Post('/notification_geofences')
+  @Auth()
+  async notification_geofences(@Body() createNotificationsGeofencesDto: CreateNotificationsGeofencesDto, @Request() req) {
+    const data = req['data'];
+
+    try {
+      //return data;
+      const notifi_telemetry = await firstValueFrom(
+        this.alertClient.send({ cmd: 'create-notification-geofences' }, { createNotificationsGeofencesDto, slug: data.slug }),
+      );
+
+      return notifi_telemetry; 
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+ 
   @Patch(':id')
   @Auth()
   async updateAlert(

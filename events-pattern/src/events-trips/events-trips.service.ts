@@ -30,14 +30,16 @@ export class EventsTripsService implements OnModuleDestroy {
   }
 
   async sendTelemetry(data: any) {
-    if (!data.latitude || !data.longitude) {
+
+    if (!data.position.latitude || !data.position.longitude) {
+      console.log(data);
       this.logger.error('Invalid telemetry data');
       return;
     }
     
     this.socket.emit('location', {
-      latitude: data.latitude,
-      longitude: data.longitude,
+      latitude: data.position.latitude,
+      longitude: data.position.longitude,
     });
 
   }

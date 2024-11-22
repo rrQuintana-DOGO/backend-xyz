@@ -4,34 +4,48 @@ import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
+// const coordsArray = [
+//   { latitude: 17.166239659199654, longitude: -96.78676571099837},
+//   { latitude: 17.163397225293558, longitude: -96.78631359949837},
+//   { latitude: 17.161946159375344, longitude: -96.78575060370046},
+//   { latitude: 17.157353797910808, longitude:  -96.78394197825276 },
+//   { latitude: 17.153830342191597, longitude:  -96.78255677027003 },
+//   { latitude: 17.1484891262012, longitude: -96.78025482917226 },
+//   { latitude: 17.138177705124477, longitude: -96.77584859243849 },
+//   { latitude: 17.129859024907564, longitude: -96.77063782264975},
+//   { latitude: 17.1263318976073, longitude: -96.76791449925194},
+//   { latitude: 17.123181397233125, longitude:  -96.76540617506976 },
+// ];
+
 const coordsArray = [
-  { latitude: 17.166239659199654, longitude: -96.78676571099837},
-  { latitude: 17.163397225293558, longitude: -96.78631359949837},
-  { latitude: 17.161946159375344, longitude: -96.78575060370046},
-  { latitude: 17.157353797910808, longitude:  -96.78394197825276 },
-  { latitude: 17.153830342191597, longitude:  -96.78255677027003 },
-  { latitude: 17.1484891262012, longitude: -96.78025482917226 },
-  { latitude: 17.138177705124477, longitude: -96.77584859243849 },
-  { latitude: 17.129859024907564, longitude: -96.77063782264975},
-  { latitude: 17.1263318976073, longitude: -96.76791449925194},
-  { latitude: 17.123181397233125, longitude:  -96.76540617506976 },
+  { latitude: 25.641197440014864, longitude: -100.28304077467403 },
+  { latitude: 27.695175725176355, longitude: -99.74796594754365 },
+  { latitude: 27.952970905838416, longitude: -99.38001786739679 },
+  { latitude: 29.519651885880343, longitude: -98.48429997116423 },
 ];
 
 export const placesSeeder = async () => {
   try {
     const place_types = await prisma.place_types.findMany();
 
+    // const placesNames = [
+    //   'Hotel',
+    //   'Restaurante',
+    //   'Aeropuerto',
+    //   'Terminal de buses',
+    //   'Terminal de trenes',
+    //   'Estación de servicio',
+    //   'Parque',
+    //   'Museo',
+    //   'Centro comercial',
+    //   'Playa'
+    // ];
+
     const placesNames = [
-      'Hotel',
-      'Restaurante',
-      'Aeropuerto',
-      'Terminal de buses',
-      'Terminal de trenes',
-      'Estación de servicio',
-      'Parque',
-      'Museo',
-      'Centro comercial',
-      'Playa'
+      'Paseo del country',,
+      'Puente internacional',
+      'Encinal',
+      'San Antonio',
     ];
 
     // Crear geofences y obtener sus IDs
@@ -40,7 +54,6 @@ export const placesSeeder = async () => {
         data: {
           id_geofence: uuidv4(),
           coords: {
-
             latitude: coords.latitude,
             longitude: coords.longitude
           },

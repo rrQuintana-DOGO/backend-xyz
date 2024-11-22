@@ -1,10 +1,12 @@
 import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { CreateAlertDto } from '@alerts/dto/create-alerts.dto';
 import { UpdateAlertDto } from '@alerts/dto/update-alerts.dto';
+import {CreateNotificationsTelemetryDto} from '@alerts/dto/create_notifications-telemetry';
+import {CreateNotificationsGeofencesDto} from '@alerts/dto/create-alert-geofence';
 import { CloseAlertDto } from '@alerts/dto/close-alerts.dto';
 import { PaginationDto } from '@common/index';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { notificationsSchema, NotificationsHistory } from '@app/mongoose';
+import { notificationsSchema, NotificationsHistory,notificationsTelemetry,notificationsTelemetrySchema,geofencesTelemetry,geofencesTelemetrySchema } from '@app/mongoose';
 import { NATS_SERVICE } from '@app/config';
 import { firstValueFrom } from 'rxjs';
 import { Alert } from '@alerts/entities/alerts.entity';
@@ -38,7 +40,7 @@ export class AlertsService {
 
     try {
       await firstValueFrom(
-        this.client.send({ cmd: 'find-one-trip' }, { id: createAlertDto.id_trip })
+        this.client.send({ cmd: 'find-one-trip' }, { id: createAlertDto.id_trip, slug: slug })
       );
     }
     catch (error) {
@@ -50,7 +52,7 @@ export class AlertsService {
 
     try {
       await firstValueFrom(
-        this.client.send({ cmd: 'find-one-event' }, { id: createAlertDto.id_event })
+        this.client.send({ cmd: 'find-one-event' }, { id: createAlertDto.id_event, slug: slug })
       );
     }
     catch (error) {
@@ -63,13 +65,229 @@ export class AlertsService {
     try {
       const notification = await Notifications.create(createAlertDto);
 
-      //return this.findOne(notification._id);
-
       return notification;
     } catch (error) {
       this.logger.error(error);
       throw new RpcException({
         message: 'Error al crear notification',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
+
+  async createNotificationTelemetry(createNotificationTelemetriDto: CreateNotificationsTelemetryDto, slug: string) {
+    //return createNotificationTelemetriDto;
+    const { location } = createNotificationTelemetriDto as any; // Usar "any" para manejar objetos anidados no declarados directamente en el DTO
+    const { lat: latitude, lon: longitude } = location; // Renombrar campos a "latitude" y "longitude"
+
+    // Establecer conexión a la base de datos según el slug
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
+    const NotificationsHistory = dbConnection.model('notifications_telemetry', notificationsTelemetrySchema);
+    const uuid = require('uuid');
+
+    try {
+      await firstValueFrom(
+        this.client.send({ cmd: 'find-one-event' }, { id: createNotificationTelemetriDto.event_uuid,slug: slug  })
+      );
+    }
+    catch (error) {
+      throw new RpcException({
+        message: `El evento ${createNotificationTelemetriDto.event_uuid} no existe`,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    try {
+      await firstValueFrom(
+        this.client.send({ cmd: 'find-one-client' }, { id: createNotificationTelemetriDto.client_uuid,slug: slug })
+      );
+    }
+    catch (error) {
+      throw new RpcException({
+        message: `El Client ${createNotificationTelemetriDto.client_uuid} no existe`,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+    //TRIP ID
+    //42a4691f-3f19-4aed-bbd1-2e341b8fb86a
+    // Mapear los datos al esquema de MongoDB
+    const mappedData = {
+      _id: uuid.v4(), // Genera un UUID único
+      alert: createNotificationTelemetriDto.alert, 
+      id_device: createNotificationTelemetriDto.device_id,
+      value: createNotificationTelemetriDto.value,
+      datetime: createNotificationTelemetriDto.datetime,
+      latitude, // Asignar el valor extraído directamente
+      longitude, // Asignar el valor extraído directamente
+      event_uuid: createNotificationTelemetriDto.event_uuid,
+      client_uuid: createNotificationTelemetriDto.client_uuid,
+      event_date: Date.now(), // Fecha de registro del server
+      duration: createNotificationTelemetriDto.duration,
+    };
+
+    const id_trip = "42a4691f-3f19-4aed-bbd1-2e341b8fb86a";
+    const id_unit = "65298909-e732-48db-995b-053b13df00ca";
+    const id_trip_log = "c4033825-5974-4830-bd86-11195f9627b1";
+    /*
+      {
+    "id_trip": "42a4691f-3f19-4aed-bbd1-2e341b8fb86a",
+    "id_unit": "65298909-e732-48db-995b-053b13df00ca",
+    "id_event": "00634e8d-4c2a-49d4-8ff6-bb99e6b15c3b",
+    "id_trip_log": "c4033825-5974-4830-bd86-11195f9627b1",
+    "register_date": 1727731234
+}
+    */
+
+    const createAlertDto: CreateAlertDto = {
+      _id: uuid.v4(),
+      id_trip: id_trip,
+      id_unit: id_unit,
+      id_event: createNotificationTelemetriDto.event_uuid,
+      id_trip_log: id_trip_log,
+      register_date: createNotificationTelemetriDto.datetime
+    }
+
+    try {
+      //return mappedAlert;
+      const alert = await firstValueFrom(
+        this.client.send({ cmd: 'create-alert' }, { createAlertDto,slug: slug })
+      );
+
+      return alert;
+    
+    } catch (error) {
+      this.logger.error(error);
+      throw new RpcException({
+        message: error,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    try {
+      // Crear el documento en MongoDB
+      const notification = await NotificationsHistory.create(mappedData);
+      //return notification;
+    } catch (error) {
+      this.logger.error(error);
+      throw new RpcException({
+        message: 'Error al crear notification history',
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+
+  async createGeofenceTelemetry(createNotificationGeofencesDto: CreateNotificationsGeofencesDto, slug: string) {
+    //return createNotificationTelemetriDto;
+    const { location } = createNotificationGeofencesDto as any; // Usar "any" para manejar objetos anidados no declarados directamente en el DTO
+    const { lat: latitude, lon: longitude } = location; // Renombrar campos a "latitude" y "longitude"
+
+    // Establecer conexión a la base de datos según el slug
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
+    const NotificationsGeofences = dbConnection.model('geofences_telemetry', geofencesTelemetrySchema);
+    const uuid = require('uuid');
+
+    try {
+      await firstValueFrom(
+        this.client.send({ cmd: 'find-one-event' }, { id: createNotificationGeofencesDto.event_uuid,slug: slug  })
+      );
+    }
+    catch (error) {
+      throw new RpcException({
+        message: `El evento ${createNotificationGeofencesDto.event_uuid} no existe`,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    try {
+      await firstValueFrom(
+        this.client.send({ cmd: 'find-one-client' }, { id: createNotificationGeofencesDto.client_uuid,slug: slug })
+      );
+    }
+    catch (error) {
+      throw new RpcException({
+        message: `El Client ${createNotificationGeofencesDto.client_uuid} no existe`,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    /*
+    const geofencesTelemetrySchema = new Schema({
+    _id: { type: String, required: true },
+    event_type: { type: String, required: true },
+    id_device: { type: Number, required: true },
+    geofence: { type: String, required: true },
+    datetime: { type: Number, required: true },
+    event_uuid: { type: String, required: true },    
+    client_uuid: { type: String, required: true },
+    latitude: { type: String, required: true },
+    longitude: { type: String, required: true },
+    event_date: { type: Number, required: true },    
+
+});
+    */
+    //TRIP ID
+    //42a4691f-3f19-4aed-bbd1-2e341b8fb86a
+    // Mapear los datos al esquema de MongoDB
+    const mappedData = {
+      _id: uuid.v4(), // Genera un UUID único
+      event_type: createNotificationGeofencesDto.event_type, 
+      id_device: createNotificationGeofencesDto.id_device,
+      geofence: createNotificationGeofencesDto.geofence, 
+      datetime: createNotificationGeofencesDto.datetime,
+      event_uuid: createNotificationGeofencesDto.event_uuid,
+      client_uuid: createNotificationGeofencesDto.client_uuid,
+      latitude, // Asignar el valor extraído directamente
+      longitude, // Asignar el valor extraído directamente
+      event_date: Date.now(), // Fecha de registro del server
+    };
+
+    const id_trip = "42a4691f-3f19-4aed-bbd1-2e341b8fb86a";
+    const id_unit = "65298909-e732-48db-995b-053b13df00ca";
+    const id_trip_log = "c4033825-5974-4830-bd86-11195f9627b1";
+    /*
+      {
+    "id_trip": "42a4691f-3f19-4aed-bbd1-2e341b8fb86a",
+    "id_unit": "65298909-e732-48db-995b-053b13df00ca",
+    "id_event": "00634e8d-4c2a-49d4-8ff6-bb99e6b15c3b",
+    "id_trip_log": "c4033825-5974-4830-bd86-11195f9627b1",
+    "register_date": 1727731234
+}
+    */
+
+    const createAlertDto: CreateAlertDto = {
+      _id: uuid.v4(),
+      id_trip: id_trip,
+      id_unit: id_unit,
+      id_event: createNotificationGeofencesDto.event_uuid,
+      id_trip_log: id_trip_log,
+      register_date: createNotificationGeofencesDto.datetime
+    }
+
+    try {
+      //return mappedAlert;
+      const alert = await firstValueFrom(
+        this.client.send({ cmd: 'create-alert' }, { createAlertDto,slug: slug })
+      );
+
+      return alert;
+    
+    } catch (error) {
+      this.logger.error(error);
+      throw new RpcException({
+        message: error,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+
+    try {
+      // Crear el documento en MongoDB
+      const notification = await NotificationsGeofences.create(mappedData);
+      //return notification;
+    } catch (error) {
+      this.logger.error(error);
+      throw new RpcException({
+        message: 'Error al crear notification history',
         status: HttpStatus.BAD_REQUEST,
       });
     }
@@ -106,8 +324,8 @@ export class AlertsService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
-    const dbConnection = await this.dbManager.getMongoConnection('test');
+  async findAll(paginationDto: PaginationDto, slug: string) {
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
     const Notifications = dbConnection.model('notifications', notificationsSchema);
 
     const { page, limit } = paginationDto;
@@ -126,19 +344,18 @@ export class AlertsService {
           id_trip_log: notification.id_trip_log, 
           id_trip: notification.id_trip, 
           id_unit: notification.id_unit, 
-          id_event: notification.id_event
+          id_event: notification.id_event,
+          slug: slug
         });
   
         return {
           id_notification: notification?._id,
-          id_trip: notification?.id_trip,
-          id_ext: trip?.id_ext,
-          trip_type: trip.trip_type.name,
-          unit: unit.name,
-          status: trip_log.status.name,
-          situation: trip_log.situation.name,
-          event: event?.name,
+          trip: trip,
+          unit: unit,
+          trip_log: trip_log,
+          event: event,
           alert_time: notification?.register_date.toString(),
+          type: 'event'
         };
       })
     );
@@ -153,8 +370,8 @@ export class AlertsService {
     };
   }
 
-  async findAllByTrips(paginationDto: PaginationDto) {
-    const dbConnection = await this.dbManager.getMongoConnection('test');
+  async findAllByTrips(paginationDto: PaginationDto, slug) {
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
     const Notifications = dbConnection.model('notifications', notificationsSchema);
 
     const { page, limit } = paginationDto;
@@ -196,17 +413,21 @@ export class AlertsService {
     const data_trips = await Promise.all(totalGroupedNotifications.map(async notification => {
       const { mostRecentNotification, oldestNotification } = notification;
     
-      const { unit, trip, trip_log } = await this.getMicroservicesData({ id_unit: oldestNotification?.id_unit, id_trip: oldestNotification?.id_trip, id_trip_log: mostRecentNotification?.id_trip_log });
+      const { unit, trip, trip_log } = await this.getMicroservicesData({ 
+        id_unit: oldestNotification?.id_unit, 
+        id_trip: oldestNotification?.id_trip, 
+        id_trip_log: mostRecentNotification?.id_trip_log, 
+        slug: slug 
+      });
     
       return {
-        id_trip: trip?.id_trip,
-        id_ext: trip?.id_ext,
-        id_trip_type: trip?.trip_types?.name,
+        trip: trip,
         unit: unit?.name,
         situation: trip_log.situation?.name,
         status: trip_log.status?.name,
         alert_time: oldestNotification?.register_date.toString(),
         active_alerts: notification?.totalNotifications,
+        type: 'trip'
       };
     }));
 
@@ -220,8 +441,8 @@ export class AlertsService {
     };
   }
 
-  async findOne(id_notification: string) {
-    const dbConnection = await this.dbManager.getMongoConnection('test');
+  async findOne(id_notification: string, slug: string) {
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
     const Notifications = dbConnection.model('notifications', notificationsSchema);
 
     let alert: Alert | AlertsHistory;
@@ -253,7 +474,8 @@ export class AlertsService {
       id_trip_log: id_trip_log, 
       id_trip: id_trip, 
       id_unit: id_unit, 
-      id_event: id_event
+      id_event: id_event,
+      slug: slug
     });
 
     return {
@@ -265,11 +487,11 @@ export class AlertsService {
     };
   }
 
-  async update(id_notification: string, updateAlertDto: UpdateAlertDto) {
-    const dbConnection = await this.dbManager.getMongoConnection('test');
+  async update(id_notification: string, updateAlertDto: UpdateAlertDto, slug: string) {
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
     const Notifications = dbConnection.model('notifications', notificationsSchema);
 
-    await this.findOne(id_notification);
+    await this.findOne(id_notification, slug);
 
     const data = { ...updateAlertDto };
     
@@ -278,11 +500,11 @@ export class AlertsService {
       { ...data }
     );
 
-    return this.findOne(id_notification);
+    return this.findOne(id_notification, slug);
   }
 
-  async close_alert(closeAlertDto: CloseAlertDto) {
-    const dbConnection = await this.dbManager.getMongoConnection('test');
+  async close_alert(closeAlertDto: CloseAlertDto, slug: string) {
+    const dbConnection = await this.dbManager.getMongoConnection(slug);
     const Notifications = dbConnection.model('notifications', notificationsSchema);
 
     const { id_trip_log_attention, id_notification } = closeAlertDto;
@@ -326,7 +548,8 @@ export class AlertsService {
       id_trip_log:id_trip_log, 
       id_trip: id_trip, 
       id_unit: id_unit, 
-      id_event: id_event
+      id_event: id_event,
+      slug: slug
     });
 
     try {
@@ -344,7 +567,7 @@ export class AlertsService {
 
       await Notifications.deleteOne({ _id: id_notification });
 
-      return this.findOne(id_notification);
+      return this.findOne(id_notification, slug);
     }
     catch (error) {
       throw new RpcException({
@@ -360,18 +583,20 @@ export class AlertsService {
     id_trip,
     id_trip_log,
     id_event,
+    slug,
   }: {
     id_unit?: string;
     id_trip?: string;
     id_trip_log?: string;
     id_event?: any;
+    slug: string;
   }): Promise<any> {
     const result: any = {};
   
     if (id_unit) {
       try {
         result.unit = await firstValueFrom(
-          this.client.send({ cmd: 'find-one-unit' }, { id: id_unit })
+          this.client.send({ cmd: 'find-one-unit' }, { id: id_unit, slug: slug })
         );
       } catch (error) {
         throw new RpcException({
@@ -384,7 +609,7 @@ export class AlertsService {
     if (id_trip) {
       try {
         result.trip = await firstValueFrom(
-          this.client.send({ cmd: 'find-one-trip' }, { id: id_trip })
+          this.client.send({ cmd: 'find-one-trip' }, { id: id_trip, slug: slug })
         );
       } catch (error) {
         throw new RpcException({
@@ -397,7 +622,7 @@ export class AlertsService {
     if (id_trip_log) {
       try {
         result.trip_log = await firstValueFrom(
-          this.client.send({ cmd: 'find-one-trip-log' }, { id: id_trip_log })
+          this.client.send({ cmd: 'find-one-trip-log' }, { id: id_trip_log, slug: slug })
         );
       } catch (error) {
         throw new RpcException({
@@ -410,7 +635,7 @@ export class AlertsService {
     if (id_event) {
       try {
         result.event = await firstValueFrom(
-          this.client.send({ cmd: 'find-one-event' }, { id: id_event })
+          this.client.send({ cmd: 'find-one-event' }, { id: id_event, slug: slug })
         );
       } catch (error) {
         throw new RpcException({

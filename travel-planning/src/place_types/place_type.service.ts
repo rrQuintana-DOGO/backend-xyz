@@ -29,11 +29,12 @@ export class PlacesTypesService {
     }
   }
 
-  async create(createPlaceTypeDto: CreatePlaceTypeDto, slug: string) {
+  async create(createPlaceTypesDto: CreatePlaceTypeDto, slug: string) {
+    //return createPlaceTypeDto;
     const dbConnection = await this.dbManager.getPostgresConnection(slug);
 
     try {
-      await this.verifyPlaceExists(createPlaceTypeDto.name, slug);
+      await this.verifyPlaceExists(createPlaceTypesDto.name, slug);
     }
     catch (error) {
       this.logger.error(error);
@@ -45,7 +46,7 @@ export class PlacesTypesService {
 
     try {
       return dbConnection.place_types.create({
-        data: createPlaceTypeDto,
+        data: createPlaceTypesDto,
       });
     }
     catch (error) {

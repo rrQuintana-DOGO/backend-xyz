@@ -10,7 +10,7 @@ import { UUIDGuard } from '@app/common/guards/uuid-guard.decorator';
 export class RoutesController {
   constructor(private readonly routesService: RoutesService) {}
 
-  @MessagePattern('createRoute')
+  @MessagePattern({cmd:'create-route'})
   create(@Payload() data: {createRouteDto: CreateRouteDto, slug: string}) {
     const { createRouteDto, slug } = data;
 
@@ -24,20 +24,20 @@ export class RoutesController {
     return this.routesService.findAll(slug, paginationDto);
   }
 
-  @MessagePattern('findOneRoute')
+  @MessagePattern({cmd:'find-one-route'})
   @UUIDGuard('id')
   findOne(@Payload('id', ParseUUIDPipe) id: string, @Payload('slug') slug: string) {
     return this.routesService.findOne(id, slug);
   }
 
-  @MessagePattern('updateRoute')
+  @MessagePattern({cmd:'update-route'})
   update(@Payload() data: { updateRouteDto: UpdateRouteDto, slug: string }) {
     const { updateRouteDto, slug } = data;
 
     return this.routesService.update(updateRouteDto.id, updateRouteDto, slug);
   }
 
-  @MessagePattern('deleteRoute')
+  @MessagePattern({cmd:'remove-route'})
   remove(@Payload('id', ParseUUIDPipe) id: string, @Payload('slug') slug: string) {
     return this.routesService.remove(id, slug);
   }
