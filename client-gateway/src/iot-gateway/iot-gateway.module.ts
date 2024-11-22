@@ -6,18 +6,14 @@ import { envs } from '@app/config';
 import { TelemetryController } from '@iotGateway/telemetry/telemetry.controller';
 
 @Module({
-  controllers: [
-    DataBaseManagerController,
-    TelemetryController,
-  ],
+  controllers: [DataBaseManagerController, TelemetryController],
   providers: [],
   imports: [
     NatsModule,
     JwtModule.register({
       secret: envs.secretKeyToken,
       signOptions: { expiresIn: '1h' },
-    })
+    }),
   ],
 })
-
 export class IoTGatewayModule {}

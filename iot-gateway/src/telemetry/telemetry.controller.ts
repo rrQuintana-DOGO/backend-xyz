@@ -1,11 +1,11 @@
 import { PaginationDto } from '@common/index';
-import { Controller} from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { TelemetryService } from '@telemetry/telemetry.service';
 
 @Controller('telemetry')
-export class  TelemetryController {
-  constructor(private readonly telemetryService: TelemetryService) {}
+export class TelemetryController {
+  constructor(private readonly telemetryService: TelemetryService) { }
 
   @MessagePattern({ cmd: 'find-all-data-device' })
   findAll(@Payload() data: { ident: string, slug: string, paginationDto: PaginationDto }) {
@@ -19,5 +19,11 @@ export class  TelemetryController {
     const { ident, slug } = data;
 
     return this.telemetryService.getLastTelemetryData(ident, slug);
+  }
+
+  @MessagePattern('mqtt-data-processed')
+  handleProcessedData(data: any) {
+    //console.log('Mensaje recibido:', data);
+    // Lógica para procesar el mensaje
   }
 }

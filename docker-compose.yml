@@ -36,6 +36,7 @@ services:
     build: ./client-gateway
     ports:
       - "${CLIENT_GATEWAY_PORT}:8000"
+      - "8001:8001"   
     volumes:
       - ./client-gateway/src:/usr/src/app/src
     command: npm run start:dev
@@ -131,6 +132,19 @@ services:
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
       - EMAIL_TEMPLATE_ID=${EMAIL_TEMPLATE_ID}
       - EMAIL=${EMAIL}
+    networks:
+        - my_shared_network
+  
+  events-pattern-ms:
+    depends_on:
+      - nats-server
+    build: ./events-pattern
+    volumes:
+      - ./events-pattern/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - NATS_SERVERS=nats://nats-server:4222
+      - SOCKET_URL=${SOCKET_URL}
     networks:
         - my_shared_network
 
@@ -277,7 +291,7 @@ services:
       - ./iot-gateway/mongo:/data/db
     restart: always
     ports:
-      - "27022:27017"
+      - "27023:27017"
     networks:
         - my_shared_network
         

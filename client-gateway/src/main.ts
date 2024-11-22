@@ -12,10 +12,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  const allowedOrigins = [
-    envs.reactAppUrl,
-    envs.admonUrl
-  ];
+  const allowedOrigins = [envs.reactAppUrl, envs.admonUrl];
 
   app.enableCors({
     origin: allowedOrigins,

@@ -6,6 +6,8 @@ import { TwilioModule } from '@twilio/twilio.module';
 import { NotificationsModule } from '@notifications/notifications.module';
 import { NatsModule } from '@transports/nats.module';
 import { IoTGatewayModule } from '@iotGateway/iot-gateway.module';
+import { SocketGateway } from './socket/socket.gateway';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -17,9 +19,9 @@ import { IoTGatewayModule } from '@iotGateway/iot-gateway.module';
     UnitsModule,
     IoTGatewayModule,
     NatsModule,
+    SocketModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [SocketGateway],
 })
-
 export class AppModule {}
