@@ -48,14 +48,14 @@ export class TripLogsController {
 
   @Get('trip/:id')
   @Auth()
-  async findLogsById(@Param('id') id: string, @Request() req) {
+  async findLogsById(@Param('id') id: string, @Request() req: any, @Query() paginationDto: PaginationDto) {
     const data = req['data'];
     
     try {
       const trip_logs = await firstValueFrom(
         this.tripLogsClient.send(
           { cmd: 'find-logs-by-id' }, 
-          { id, slug: data.slug }
+          { id, slug: data.slug, paginationDto }
         ),
       );
 

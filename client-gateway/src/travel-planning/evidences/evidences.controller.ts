@@ -75,7 +75,7 @@ export class EvidencesController {
 
   @Get()
   @Auth()
-  async findAllEvidences(@Query() paginationDto: PaginationDto, @Request() req) {
+  async findAllEvidences(@Query() paginationDto: PaginationDto, @Request() req: any) {
     const data = req['data'];
 
     try {

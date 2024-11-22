@@ -3,11 +3,12 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UUIDGuard } from '@common/guards/uuid-guard.decorator';
 import { TripLogsService } from '@trip_logs/trip_logs.service';
 import { CreateTripLogDto } from './dto/create-trip_logs.dto';
+import { PaginationDto } from '@app/common';
 
 
 @Controller('trips_logs')
 export class TripLogsController {
-  constructor(private readonly tripLogsService: TripLogsService) {}
+  constructor(private readonly tripLogsService: TripLogsService) { }
 
   @MessagePattern({ cmd: 'create-trip-log' })
   create(@Payload() data: { createTripLogDto: CreateTripLogDto, slug: string }) {
@@ -18,8 +19,9 @@ export class TripLogsController {
 
   @MessagePattern({ cmd: 'find-logs-by-id' })
   @UUIDGuard('id')
-  findLogsById(@Payload('id', ParseUUIDPipe) id: string, @Payload('slug') slug: string) {
-    return this.tripLogsService.findLogsById(id, slug);
+  findLogsById(@Payload() payload: { id: string, slug: string, paginationDto: PaginationDto }) {
+    const { id, slug, paginationDto } = payload;
+    return this.tripLogsService.findLogsById(id, slug, paginationDto);
   }
 
   @MessagePattern({ cmd: 'find-one-trip-log' })

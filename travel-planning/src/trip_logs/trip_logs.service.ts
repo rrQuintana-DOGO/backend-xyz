@@ -6,6 +6,7 @@ import { tripLogsSchema } from '@mongo/models/trip_logs.model';
 import { firstValueFrom } from 'rxjs';
 import { SituationsService } from '@app/situations/situations.service';
 import { DataBaseManagerService } from '@dbManager/db_manager.service';
+import { validatePageAndLimit } from '@app/common/exceptions/validatePages';
 
 @Injectable()
 export class TripLogsService {
@@ -15,7 +16,7 @@ export class TripLogsService {
     @Inject(NATS_SERVICE) private readonly client: ClientProxy,
     private readonly situationsService: SituationsService,
     private readonly dbManager: DataBaseManagerService,
-  ) {}
+  ) { }
 
   async create(createTripLogsDto: CreateTripLogDto, slug: string) {
     const dbConnection = await this.dbManager.getMongoConnection(slug);
@@ -25,7 +26,7 @@ export class TripLogsService {
 
     try {
       await firstValueFrom(
-        this.client.send({ cmd: 'find-one-trip' }, { id: id_trip })
+        this.client.send({ cmd: 'find-one-trip' }, { id: id_trip, slug: slug })
       );
     }
     catch (error) {
@@ -37,7 +38,7 @@ export class TripLogsService {
 
     try {
       const user = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-user' }, { id: id_user })
+        this.client.send({ cmd: 'find-one-user' }, { id: id_user, slug: slug })
       );
     }
     catch (error) {
@@ -49,7 +50,7 @@ export class TripLogsService {
 
     try {
       const status = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-status' }, { id: id_status })
+        this.client.send({ cmd: 'find-one-status' }, { id: id_status, slug: slug })
       );
     }
     catch (error) {
@@ -61,7 +62,7 @@ export class TripLogsService {
 
     try {
       const situation = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-situation' }, { id: id_situation })
+        this.client.send({ cmd: 'find-one-situation' }, { id: id_situation, slug: slug })
       );
     }
     catch (error) {
@@ -90,7 +91,7 @@ export class TripLogsService {
 
     const eightHoursAgo = Math.floor(Date.now() / 1000) - 8 * 60 * 60;
     const id_completed_situation = await this.situationsService.validateSituationsExist(['TC'], 'name', slug);
-    
+
     try {
       const trips = await TripLogs.aggregate([
         {
@@ -124,13 +125,15 @@ export class TripLogsService {
     }
   }
 
-  async findLogsById(id: string, slug: string) {
+  async findLogsById(id: string, slug: string, paginationDto) {
     const dbConnection = await this.dbManager.getMongoConnection(slug);
     const TripLogs = dbConnection.model('trip_logs', tripLogsSchema);
 
+    const { page, limit } = paginationDto;
+
     try {
-      const trip = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-trip' }, { id: id })
+      await firstValueFrom(
+        this.client.send({ cmd: 'find-one-trip' }, { id: id, slug: slug })
       );
     }
     catch (error) {
@@ -140,20 +143,39 @@ export class TripLogsService {
       });
     }
 
+    const totalRecords = await TripLogs.countDocuments();
+    const totalPages = Math.ceil(totalRecords / limit);
+    const lastPage = Math.ceil(totalPages / limit);
+
+    validatePageAndLimit(page, lastPage);
+
     const logs = await TripLogs.find({
       id_trip: id
-    });
-
+    }).sort({ created_at: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+      
     const trip_logs = await Promise.all(logs.map(log => this.findOne(log._id, slug)));
 
-    return trip_logs;
+    return {
+      data: trip_logs,
+      meta: {
+        total_records: totalRecords,
+        current_page: page,
+        total_pages: lastPage
+      }
+    }
   }
 
-  async findOne(id: string, slug:string) {
+  async findOne(id: string, slug: string) {
     const dbConnection = await this.dbManager.getMongoConnection(slug);
     const TripLogs = dbConnection.model('trip_logs', tripLogsSchema);
 
-    let trip, status, situation, user, trip_log;
+    let trip_log = null;
+    let status = null;
+    let situation = null;
+    let user = null;
+    let trip = null;
 
     try {
       trip_log = await TripLogs.findOne({ _id: id });
@@ -169,7 +191,7 @@ export class TripLogsService {
 
     try {
       trip = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-trip' }, { id: id_trip })
+        this.client.send({ cmd: 'find-one-trip' }, { id: id_trip, slug: slug })
       );
     }
     catch (error) {
@@ -181,7 +203,7 @@ export class TripLogsService {
 
     try {
       user = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-user' }, { id: id_user })
+        this.client.send({ cmd: 'find-one-user' }, { id: id_user, slug: slug })
       );
     }
     catch (error) {
@@ -193,7 +215,7 @@ export class TripLogsService {
 
     try {
       status = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-status' }, { id: id_status })
+        this.client.send({ cmd: 'find-one-status' }, { id: id_status, slug: slug })
       );
     }
     catch (error) {
@@ -204,8 +226,8 @@ export class TripLogsService {
     }
 
     try {
-      situation = await firstValueFrom(
-        this.client.send({ cmd: 'find-one-situation' }, { id: id_situation })
+      await firstValueFrom(
+        this.client.send({ cmd: 'find-one-situation' }, { id: id_situation, slug: slug })
       );
     }
     catch (error) {
@@ -216,12 +238,19 @@ export class TripLogsService {
     }
 
     return {
-      id_trip_log: trip_log._id,
-      trip,
-      user,
+      id: trip_log?._id,
+      user: {
+        id: user?.id_user,
+        name: user?.name,
+      },
       status,
       situation,
-      created_at: trip_log.created_at
+      place: {
+        latitude: 17.166239659199654,
+        longitude: -96.78676571099837
+      },
+      comments: trip_log?.comment,
+      created_at: trip_log?.created_at
     };
   }
 }
