@@ -4,11 +4,19 @@ import { Logger } from '@nestjs/common';
 import { envs } from '@config/index';
 import { RpcCustomExceptionFilter } from '@common/index';
 import { CustomValidationPipe } from '@common/exceptions/custom-validation-pipe';
+import * as fs from 'fs';
 
 async function bootstrap() {
   const logger = new Logger('Main-Gateway');
 
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions = {
+    key: fs.readFileSync('./certificates/server.key'), // Ruta al archivo de clave privada
+    cert: fs.readFileSync('./certificates/server.crt'), // Ruta al archivo de certificado
+  };
+
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions,
+  });
 
   app.setGlobalPrefix('api');
 
